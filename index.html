@@ -21,12 +21,14 @@
         .btn-logout { background: var(--vermelho); border: none; padding: 5px 12px; border-radius: 40px; color: white; cursor: pointer; font-weight: 600; }
         .card { background: var(--branco); border-radius: 32px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); border: 1px solid var(--cinza-borda); }
         .card h2 { color: var(--azul-escuro); border-left: 4px solid var(--vermelho); padding-left: 1rem; margin-bottom: 1.2rem; font-size: 1.5rem; }
-        .grid-forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+        .grid-forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+        .filtros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end; }
         input, select { width: 100%; padding: 10px; border-radius: 40px; border: 1px solid var(--cinza-borda); font-family: 'Inter', sans-serif; margin: 5px 0; }
         button { background: linear-gradient(135deg, #0a2f6c, #052050); border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; transition: 0.1s linear; margin: 5px 0; }
         button:active { transform: translateY(2px); }
         .btn-danger { background: linear-gradient(135deg, #b71c1c, #8b0000); }
         .btn-success { background: linear-gradient(135deg, #1e7e34, #145c24); }
+        .btn-secondary { background: linear-gradient(135deg, #4b5563, #374151); }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; overflow-x: auto; display: block; }
         th, td { border: 1px solid var(--cinza-borda); padding: 8px; text-align: left; }
         th { background: var(--azul-escuro); color: white; }
@@ -128,15 +130,46 @@
                     <button id="importCsvBtn">📤 Importar</button>
                 </div>
                 <div>
-                    <h3>🔍 Filtros</h3>
-                    <input type="text" id="filterEscola" placeholder="Filtrar por Escola">
-                    <input type="text" id="filterTurma" placeholder="Filtrar por Turma">
-                    <button id="applyFiltersBtn">Aplicar</button>
+                    <h3>🔍 Filtros Avançados</h3>
+                    <div class="filtros-grid">
+                        <div>
+                            <label>Escola</label>
+                            <select id="filterEscola">
+                                <option value="">Todas as escolas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Série</label>
+                            <select id="filterSerie">
+                                <option value="">Todas as séries</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Turma</label>
+                            <select id="filterTurma">
+                                <option value="">Todas as turmas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Status</label>
+                            <select id="filterStatus">
+                                <option value="">Todos os status</option>
+                                <option value="Abaixo do básico">Abaixo do básico</option>
+                                <option value="Básico">Básico</option>
+                                <option value="Proficiente">Proficiente</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button id="applyFiltersBtn">Aplicar Filtros</button>
+                        <button id="clearFiltersBtn" class="btn-secondary">Limpar Filtros</button>
+                    </div>
                 </div>
             </div>
             <div style="overflow-x: auto;">
                 <table id="studentsTable">
-                    <thead><tr><th>Matrícula</th><th>Nome</th><th>Escola</th><th>Série</th><th>Turma</th><th>Status</th><th>Volume</th><th>Módulo</th><th>Cena</th><th>Pontos</th><th>Conquista</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Matrícula</th><th>Nome</th><th>Escola</th><th>Série</th><th>Turma</th><th>Status</th><th>Volume</th><th>Módulo</th><th>Cena</th><th>Pontos</th><th>Conquista</th><th>Ações</th></tr>
+                    </thead>
                     <tbody id="studentsTableBody"></tbody>
                 </table>
             </div>
@@ -149,7 +182,7 @@
 
     <div id="studentPanel" style="display: none;">
         <div class="card">
-            <h2><i class="fas fa-user-graduate"></i> Meu Progresso na  Recomposição </h2>
+            <h2><i class="fas fa-user-graduate"></i> Meu Progresso na Recomposição</h2>
             <div id="studentData"></div>
         </div>
         <div class="card">
@@ -177,7 +210,7 @@
         const studentPanel = document.getElementById('studentPanel');
         const userNameDisplay = document.getElementById('userNameDisplay');
 
-        // Listas para selects
+        // Listas mestras
         const escolasList = [
             "E.E. ADAIL JARBAS DUCLOS", "E.E. AFONSO MORENO", "E.E. ALADINO POLON", "E.E. ALBERTO GRAF – CAPITÃO",
             "E.E. ALBINO FIORE", "E.E. ALFRIED THEODOR WEISZFLOG", "E.E. ANA MARIA GARRIDO ORLANDIN – PROF.ª",
@@ -209,19 +242,27 @@
         const turmasList = ["A", "B", "C", "D", "E", "G", "H", "I", "J", "L", "M", "N", "O", "P", "Q", "R", "S"];
 
         function populateSelects() {
+            // Popula selects de cadastro
             const escolaSelect = document.getElementById('escola');
             escolasList.forEach(e => { let opt = document.createElement('option'); opt.value = e; opt.textContent = e; escolaSelect.appendChild(opt); });
             const serieSelect = document.getElementById('serie');
             seriesList.forEach(s => { let opt = document.createElement('option'); opt.value = s; opt.textContent = s; serieSelect.appendChild(opt); });
             const turmaSelect = document.getElementById('turma');
             turmasList.forEach(t => { let opt = document.createElement('option'); opt.value = t; opt.textContent = t; turmaSelect.appendChild(opt); });
+
+            // Popula filtros
+            const filterEscola = document.getElementById('filterEscola');
+            escolasList.forEach(e => { let opt = document.createElement('option'); opt.value = e; opt.textContent = e; filterEscola.appendChild(opt); });
+            const filterSerie = document.getElementById('filterSerie');
+            seriesList.forEach(s => { let opt = document.createElement('option'); opt.value = s; opt.textContent = s; filterSerie.appendChild(opt); });
+            const filterTurma = document.getElementById('filterTurma');
+            turmasList.forEach(t => { let opt = document.createElement('option'); opt.value = t; opt.textContent = t; filterTurma.appendChild(opt); });
         }
 
         function calcularPontos(volume, modulo, cena) {
             return (volume * 1000) + (modulo * 100) + (cena * 10);
         }
 
-        // Gera texto único para cada combinação volume-módulo-cena (ordem crescente)
         function gerarConquista(volume, modulo, cena) {
             const prefixos = [
                 "Explorador", "Desbravador", "Navegador", "Desafiador", "Conquistador",
@@ -252,8 +293,13 @@
         async function carregarEstudantes(filters = {}) {
             if (!currentUser || currentUser.role !== 'professor') return;
             let query = supabase.from('tutor_alunos').select('*');
-            if (filters.escola) query = query.ilike('escola', `%${filters.escola}%`);
-            if (filters.turma) query = query.ilike('turma', `%${filters.turma}%`);
+            
+            // Aplicar filtros dinamicamente
+            if (filters.escola && filters.escola !== '') query = query.eq('escola', filters.escola);
+            if (filters.serie && filters.serie !== '') query = query.eq('serie', filters.serie);
+            if (filters.turma && filters.turma !== '') query = query.eq('turma', filters.turma);
+            if (filters.status && filters.status !== '') query = query.eq('status', filters.status);
+            
             const { data, error } = await query.order('pontos', { ascending: false });
             if (error) { alert('Erro ao carregar: ' + error.message); return; }
             studentsList = data || [];
@@ -297,7 +343,8 @@
                 const { error } = await supabase.from('tutor_alunos').update({ ...estudante, pontos, conquista_titulo: conquista.titulo, conquista_frase: conquista.frase }).eq('id', estudante.id);
                 if (error) { alert('Erro ao atualizar: ' + error.message); return; }
             }
-            carregarEstudantes();
+            // Recarregar mantendo os filtros atuais
+            aplicarFiltros();
             atualizarRankings();
         }
 
@@ -305,7 +352,7 @@
             if (confirm('Remover aluno?')) {
                 const { error } = await supabase.from('tutor_alunos').delete().eq('id', id);
                 if (error) alert(error.message);
-                else carregarEstudantes();
+                else aplicarFiltros();
             }
         }
 
@@ -347,7 +394,7 @@
             document.getElementById('escola').selectedIndex = 0;
             document.getElementById('serie').selectedIndex = 0;
             document.getElementById('turma').selectedIndex = 0;
-            document.getElementById('status').selectedIndex = 1;
+            document.getElementById('status').selectedIndex = 0;
             document.getElementById('volume').value = '1';
             document.getElementById('modulo').value = '1';
             document.getElementById('cena').value = '1';
@@ -403,9 +450,25 @@
                         else inserted++;
                     }
                     alert(`Importação concluída: ${inserted} inseridos. Erros: ${errors.length}\n${errors.slice(0,5).join('\n')}`);
-                    carregarEstudantes();
+                    aplicarFiltros();
                 }
             });
+        }
+
+        function aplicarFiltros() {
+            const escola = document.getElementById('filterEscola').value;
+            const serie = document.getElementById('filterSerie').value;
+            const turma = document.getElementById('filterTurma').value;
+            const status = document.getElementById('filterStatus').value;
+            carregarEstudantes({ escola, serie, turma, status });
+        }
+
+        function limparFiltros() {
+            document.getElementById('filterEscola').value = '';
+            document.getElementById('filterSerie').value = '';
+            document.getElementById('filterTurma').value = '';
+            document.getElementById('filterStatus').value = '';
+            aplicarFiltros();
         }
 
         async function atualizarRankings() {
@@ -498,7 +561,7 @@
                 loginPanel.style.display = 'none';
                 professorPanel.style.display = 'block';
                 studentPanel.style.display = 'none';
-                carregarEstudantes();
+                aplicarFiltros();
                 atualizarRankings();
             }
         };
@@ -528,11 +591,8 @@
             if (file) importCSV(file);
             else alert('Selecione um arquivo CSV');
         };
-        document.getElementById('applyFiltersBtn').onclick = () => {
-            const escola = document.getElementById('filterEscola').value;
-            const turma = document.getElementById('filterTurma').value;
-            carregarEstudantes({ escola, turma });
-        };
+        document.getElementById('applyFiltersBtn').onclick = () => aplicarFiltros();
+        document.getElementById('clearFiltersBtn').onclick = () => limparFiltros();
 
         populateSelects();
         loginPanel.style.display = 'block';
